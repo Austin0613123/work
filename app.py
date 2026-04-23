@@ -40,7 +40,7 @@ with st.form("citation_form"):
         bookname = st.text_input("8. 著作名稱／收錄書目／報社／刊名")
         time = st.text_input("9. 出版年份 / 文獻形成時間")
         place = st.text_input("10. 出版地／收藏地／學校")
-        publisher = st.text_input("11. 出版社 / 頒佈部門")
+        publisher = st.text_input("11. 出版社 / 網站名稱")
         link = st.text_input("12. 網址")
         page = st.text_input("13. 頁數")
         access_date = st.text_input("14. 瀏覽日期 / 發布日期")
@@ -59,13 +59,15 @@ if submitted:
         v_c = f"{volume}、{book_class}" if volume and book_class else f"{volume}{book_class}"
         
         # 拼接
-        res = f"{p1}{sep}{p2}{v_c}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '，')}{clean(version, '，')}{clean(page, '，頁')}。"
+        res = f"{p1}{sep}{p2}{v_c}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '年，')}{clean(version, '，')}{clean(page, '，頁')}。"
 
     elif source_type == "著作":
         # 格式：作者：《書名》（版本），地：者，年份，頁。
         v = clean(version, "（", "）")
         res = f"{clean(author, suffix='：')}{clean(bookname, '《', '》')}{v}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '，')}{clean(page, '，頁')}。"
 
+
+    
     # ... 其他 10 種邏輯可以在此繼續補齊 ...
     else:
         res = f"【{source_type}】的生成邏輯開發中，目前僅支援古籍與著作。"

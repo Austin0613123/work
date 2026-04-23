@@ -24,6 +24,8 @@ source_type = st.selectbox("📌 請選擇資料類型", options)
 
 with st.form("citation_form"):
     st.write(f"請輸入 **{source_type}** 的詳細資訊：")
+    
+col1, col2 = st.columns(2)
 
 with col1:
         # 定義 14 個基礎元素

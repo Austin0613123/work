@@ -9,10 +9,19 @@ source_type = st.selectbox("請選擇資料類型", options)
 with st.form("citation_form"):
     # 2. 根據不同類型顯示輸入框
     if source_type == "古籍":
-        dynasty = st.text_input("朝代 (如：清)")
-        author = st.text_input("作者")
-        title = st.text_input("書名")
-        version = st.text_input("版本/卷次")
+        col1, col2 = st.columns(2) # 分成兩欄美化介面
+        with col1:
+            part_author = st.text_input("析出文獻責任者 (如：蘇軾)")
+            part_title = st.text_input("析出文獻題名 (不含尖括號)")
+            whole_author = st.text_input("原書責任者與方式 (如：張三校注)")
+            whole_title = st.text_input("原書題名 (不含書名號)")
+        with col2:
+            volume = st.text_input("卷次、部類 (如：卷五‧藝文志)")
+            location = st.text_input("出版地")
+            publisher = st.text_input("出版者")
+            pub_year = st.text_input("出版年份")
+            version = st.text_input("版本 (如：影印四庫全書本)")
+            page = st.text_input("頁碼")
 
     elif source_type == "著作":
         author = st.text_input("作者")
@@ -27,6 +36,12 @@ with st.form("citation_form"):
         gazette_num = st.text_input("憲報編號/期數")
         date = st.text_input("日期 (YYYY/MM/DD)")
 
+    elif source_type == "澳門憲報":
+        gov_dept = st.text_input("頒佈部門")
+        doc_type = st.text_input("文件種類 (如：第xx/2026號行政法規)")
+        gazette_num = st.text_input("憲報編號/期數")
+        date = st.text_input("日期 (YYYY/MM/DD)")
+
     # ... 其他選項請依此類推 ...
 
     submitted = st.form_submit_button("生成引用格式")
@@ -34,7 +49,10 @@ with st.form("citation_form"):
     # 3. 處理生成的格式
     if submitted:
         if source_type == "古籍":
-            result = f"〔{dynasty}〕{author}：《{title}》，{version}。"
+            # 依照你提供的格式進行字串拼接
+            result = f"{part_author}：〈{part_title}〉，{whole_author}：《{whole_title}》{volume}，{location}：{publisher}，{pub_year}，{version}，{page}。"
+            st.success("生成的古籍引用格式：")
+            st.code(result)
         
         elif source_type == "著作":
             result = f"{author}：《{title}》，{location}：{publisher}，{year}年。"

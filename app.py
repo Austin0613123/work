@@ -22,6 +22,29 @@ options = [
 
 source_type = st.selectbox("📌 請選擇資料類型", options)
 
+with st.form("citation_form"):
+    st.write(f"請輸入 **{source_type}** 的詳細資訊：")
+
+with col1:
+        # 定義 14 個基礎元素
+        author = st.text_input("1. 作者")
+        title = st.text_input("2. 文獻／篇名／新聞標題 ")
+        version = st.text_input("3. 版本（如：刑事訴訟教程（第二版）、古籍之版本）")
+        volume = st.text_input("4. 卷數")
+        issue = st.text_input("5. 期數 ")
+        book_class = st.text_input("6. 部類（只適用於古籍）")
+        editor = st.text_input("7. 編者／校對者")
+    with col2:
+        bookname = st.text_input("8. 著作名稱／／收錄書目／報社名稱／刊物名稱")
+        time = st.text_input("9. 出版年份 / 文獻形成時間")
+        place = st.text_input("10. 出版地／收藏地／學校（碩博士論文）")
+        publisher = st.text_input("11. 出版社")
+        link = st.text_input("12. 網址 (電子資源用)")
+        page = st.text_input("13. 頁數")
+
+    submitted = st.form_submit_button("🚀 生成引用格式")
+
+
 # --- 2. 建立輸入表單 ---
 with st.form("citation_form"):
     st.write(f"當前編輯：**{source_type}**")

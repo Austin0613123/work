@@ -59,7 +59,7 @@ if submitted:
         v_c = f"{volume}、{book_class}" if volume and book_class else f"{volume}{book_class}"
         
         # 拼接
-        res = f"{p1}{sep}{p2}{v_c}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '年，')}{clean(version, '，')}{clean(page, '，頁')}。"
+        res = f"{p1}{sep}{p2}{v_c}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '，')}{clean(version, '，', '年')}{clean(page, '，頁')}。"
 
     elif source_type == "著作":
         # 格式：作者：《書名》（版本），地：者，年份，頁。

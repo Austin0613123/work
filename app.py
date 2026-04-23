@@ -2,95 +2,76 @@ import streamlit as st
 
 st.set_page_config(page_title="引用格式生成器", layout="centered")
 
+# --- 核心工具：自動處理標點符號 ---
+def clean(text, prefix="", suffix=""):
+    if text and str(text).strip():
+        return f"{prefix}{text.strip()}{suffix}"
+    return ""
+
 st.title("📚 學術引用格式生成器")
 
 # --- 1. 設定 12 種可選項 ---
 options = [
-    "古籍", 
-    "著作", 
-    "析出文獻", 
-    "期刊", 
-    "報紙", 
-    "政府出版物", 
-    "連續出版物", 
-    "小冊子", 
-    "學位論文及會議論文", 
-    "手稿及歷史檔案", 
-    "字典及詞典", 
-    "澳門憲報"
+    "古籍", "著作", "析出文獻", "期刊", "報紙", 
+    "政府出版物", "連續出版物", "小冊子", 
+    "學位論文及會議論文", "手稿及歷史檔案", "字典及詞典", "澳門憲報"
 ]
 
 source_type = st.selectbox("📌 請選擇資料類型", options)
 
+# --- 2. 建立輸入表單 (只有一個 form) ---
 with st.form("citation_form"):
     st.write(f"請輸入 **{source_type}** 的詳細資訊：")
     
-col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-with col1:
-        # 定義 14 個基礎元素
-        author = st.text_input("1. 作者")
-        title = st.text_input("2. 文獻／篇名／新聞標題 ")
-        version = st.text_input("3. 版本（如：刑事訴訟教程（第二版）、古籍之版本）")
+    with col1:
+        # 定義基礎元素 (1-7)
+        author = st.text_input("1. 作者 / 析出文獻責任者")
+        title = st.text_input("2. 文獻／篇名／新聞標題")
+        version = st.text_input("3. 版本（如：第二版、古籍版本）")
         volume = st.text_input("4. 卷數")
-        issue = st.text_input("5. 期數 ")
+        issue = st.text_input("5. 期數")
         book_class = st.text_input("6. 部類（只適用於古籍）")
         editor = st.text_input("7. 編者／校對者")
+
     with col2:
-        bookname = st.text_input("8. 著作名稱／／收錄書目／報社名稱／刊物名稱")
+        # 定義基礎元素 (8-14)
+        bookname = st.text_input("8. 著作名稱／收錄書目／報社／刊名")
         time = st.text_input("9. 出版年份 / 文獻形成時間")
-        place = st.text_input("10. 出版地／收藏地／學校（碩博士論文）")
-        publisher = st.text_input("11. 出版社")
-        link = st.text_input("12. 網址 (電子資源用)")
+        place = st.text_input("10. 出版地／收藏地／學校")
+        publisher = st.text_input("11. 出版社 / 頒佈部門")
+        link = st.text_input("12. 網址")
         page = st.text_input("13. 頁數")
+        access_date = st.text_input("14. 瀏覽日期 / 發布日期")
 
     submitted = st.form_submit_button("🚀 生成引用格式")
 
-
-# --- 2. 建立輸入表單 ---
-with st.form("citation_form"):
-    st.write(f"當前編輯：**{source_type}**")
-    
-    # 這裡預留 12 個判斷空間，之後我們一個個補齊欄位
-    if source_type == "古籍":
-        st.info("待設定：古籍欄位")
-        
-    elif source_type == "著作":
-        st.info("待設定：著作欄位")
-        
-    elif source_type == "析出文獻":
-        st.info("待設定：析出文獻欄位")
-        
-    elif source_type == "期刊":
-        st.info("待設定：期刊欄位")
-        
-    elif source_type == "報紙":
-        st.info("待設定：報紙欄位")
-        
-    elif source_type == "政府出版物":
-        st.info("待設定：政府出版物欄位")
-        
-    elif source_type == "連續出版物":
-        st.info("待設定：連續出版物欄位")
-        
-    elif source_type == "小冊子":
-        st.info("待設定：小冊子欄位")
-        
-    elif source_type == "學位論文及會議論文":
-        st.info("待設定：學位論文及會議論文欄位")
-        
-    elif source_type == "手稿及歷史檔案":
-        st.info("待設定：手稿及歷史檔案欄位")
-        
-    elif source_type == "字典及詞典":
-        st.info("待設定：字典及詞典欄位")
-        
-    elif source_type == "澳門憲報":
-        st.info("待設定：澳門憲報欄位")
-
-    # 提交按鈕
-    submitted = st.form_submit_button("🚀 生成引用格式")
-
-# --- 3. 生成結果區 ---
+# --- 3. 生成結果邏輯 ---
 if submitted:
-    st.write("格式生成邏輯待補齊...")
+    res = ""
+    
+    if source_type == "古籍":
+        # 格式：作者：〈篇名〉，編者：《書名》卷期、部類，地：者，年份，版本，頁。
+        p1 = f"{clean(author, suffix='：')}{clean(title, '〈', '〉')}"
+        p2 = f"{clean(editor, suffix='：')}{clean(bookname, '《', '》')}"
+        sep = "，" if p1 and p2 else ""
+        v_c = f"{volume}、{book_class}" if volume and book_class else f"{volume}{book_class}"
+        
+        # 拼接
+        res = f"{p1}{sep}{p2}{v_c}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '，')}{clean(version, '，')}{clean(page, '，頁')}。"
+
+    elif source_type == "著作":
+        # 格式：作者：《書名》（版本），地：者，年份，頁。
+        v = clean(version, "（", "）")
+        res = f"{clean(author, suffix='：')}{clean(bookname, '《', '》')}{v}{clean(place, '，', '：')}{clean(publisher)}{clean(time, '，')}{clean(page, '，頁')}。"
+
+    # ... 其他 10 種邏輯可以在此繼續補齊 ...
+    else:
+        res = f"【{source_type}】的生成邏輯開發中，目前僅支援古籍與著作。"
+
+    # 修正標點
+    res = res.replace("，，", "，").replace("：：", "：").replace("，。", "。")
+    
+    st.success("✅ 生成成功！")
+    st.code(res, language=None)

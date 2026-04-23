@@ -12,6 +12,24 @@ options = [
 ]
 source_type = st.selectbox("📌 請選擇資料類型", options)
 
+with st.form("citation_form"):
+    # --- 1. 先初始化所有變數，防止 NameError ---
+    author = title = pub_year = page = pub_loc = publisher = ""
+    part_author = part_title = whole_author = whole_title = ""
+    version = volume = journal = vol_num = issue_num = ""
+    # (依此類推，把所有 {} 裡出現過的名稱都寫上 = "")
+
+    # --- 2. 顯示輸入框 (維持原樣) ---
+    if source_type == "古籍":
+        part_author = st.text_input("析出文獻責任者")
+        # ... 其他輸入框 ...
+
+    # --- 3. 生成邏輯 (維持原樣) ---
+    if submitted:
+        # 這裡就不會因為變數沒被定義而崩潰了
+        if source_type == "古籍":
+             res = f"{part_author}..."
+
 # 2. 表單輸入區
 with st.form("citation_form"):
     st.subheader(f"輸入【{source_type}】內容")

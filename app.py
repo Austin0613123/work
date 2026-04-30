@@ -1,92 +1,43 @@
-import streamlit as st
-
-st.set_page_config(page_title="澳門學術引用生成器", layout="centered")
-
-# --- 1. 配置字典 ---
+# --- 1. 配置字典 (拿掉模板裡的標點) ---
 CONFIG = {
     "著作": {
         "fields": ["作者", "書名", "版本", "出版地", "出版社", "出版年份", "頁數"],
-        "template": "{作者}：《{書名}》{版本}，{出版地}：{出版社}，{出版年份}，{頁數}。"
-    },
-    "古籍": {
-        "fields": ["作者", "篇名", "編者", "書名", "卷數", "部類", "出版地", "出版年份", "版本", "頁數"],
-        "template": "{作者}：〈{篇名}〉，{編者}：《{書名}》{卷數}、{部類}，{出版地}，{出版年份}，{版本}，{頁數}。"
-    },
-    "期刊": {
-        "fields": ["作者", "篇名", "期刊名", "出版年份", "期數", "頁數"],
-        "template": "{作者}：〈{篇名}〉，《{期刊名}》，{出版年份}年第{期數}期，{頁數}。"
+        "template": "{作者}{書名}{版本}{出版地}{出版社}{出版年份}{頁數}"
     },
     "報紙": {
         "fields": ["作者", "篇名", "報紙名稱", "出版日期", "版次"], 
-        "template": "{作者}：〈{篇名}〉，《{報紙名稱}》，{出版日期}，{版次}。"
-    }, # <--- 修正處：補上逗號
-    "澳門憲報": {
-        "fields": ["標題", "法規編號", "憲報編號", "副刊", "發布日期", "頁數"],
-        "template": "〈{標題}〉，第{法規編號}號，載《澳門特別行政區憲報》第{憲報編號}期{副刊}，{發布日期}，{頁數}。"
+        "template": "{作者}{篇名}{報紙名稱}{出版日期}{版次}"
     }
 }
 
-# --- 工具函式 ---
-def clean_input(val, prefix="", suffix="", wrap=""):
-    v = str(val).strip()
-    if v:
-        if wrap == "〈〉": return f"〈{v}〉"
-        if wrap == "《》": return f"《{v}》"
-        if wrap == "（）": return f"（{v}）"
-        return f"{prefix}{v}{suffix}"
-    return ""
-
-# --- UI 介面 ---
-st.title("📚 學術引用格式生成器")
-
-source_type = st.selectbox("📌 請選擇資料類型", list(CONFIG.keys()))
-current_config = CONFIG[source_type]
-user_data = {}
-
-with st.container():
-    st.subheader(f"📝 填寫 {source_type} 資訊")
-    cols = st.columns(2)
-    for i, field_name in enumerate(current_config["fields"]):
-        with cols[i % 2]:
-            # 這裡可以透過 label 提示使用者「可不填」
-            label = field_name if "可不填" in field_name else f"{field_name}"
-            user_data[field_name] = st.text_input(label, key=f"{source_type}_{field_name}")
-
-    submit_btn = st.button("🚀 生成引用格式")
-
-# --- 3. 處理生成邏輯 ---
+# --- 3. 處理生成邏輯 (這部分雖然有幾行，但執行極快) ---
 if submit_btn:
-    processed_data = {}
-    for k, v in user_data.items():
-        # 針對不同欄位做預處理
-        if k in ["書名", "期刊名", "報紙名稱"]:
-            processed_data[k] = v.strip() # 模板裡已有《》
-        elif k in ["篇名", "標題"]:
-            processed_data[k] = v.strip() # 模板裡已有〈〉
-        elif k == "作者" and v:
-            processed_data[k] = f"{v.strip()}："
-        elif k == "版本" and v:
-            processed_data[k] = f"（{v.strip()}）"
-        elif k == "頁數" and v:
-            processed_data[k] = f"頁{v.strip()}"
-        elif k == "版次" and v:
-            processed_data[k] = f"頁{v.strip()}"
-        else:
-            processed_data[k] = v.strip()
+    d = user_data
+    p = {} # 存放處理後的資料
+    
+    # 使用我們進化的函式，把標點「封裝」進去
+    if source_type == "著作":
+        p["作者"] = clean_input(d.get("作者"), suffix="：")
+        p["書名"] = clean_input(d.get("書名"), wrap="《》")
+        p["版本"] = clean_input(d.get("版本"), wrap="（）")
+        p["出版地"] = clean_input(d.get("出版地"), prefix="，", suffix="：")
+        p["出版社"] = clean_input(d.get("出版社"))
+        p["出版年份"] = clean_input(d.get("出版年份"), prefix="，")
+        p["頁數"] = clean_input(d.get("頁數"), prefix="，頁")
 
+    elif source_type == "報紙":
+        p["作者"] = clean_input(d.get("作者"), suffix="：")
+        p["篇名"] = clean_input(d.get("篇名"), wrap="〈〉")
+        p["報紙名稱"] = clean_input(d.get("報紙名稱"), prefix="，", wrap="《》")
+        p["出版日期"] = clean_input(d.get("出版日期"), prefix="，")
+        p["版次"] = clean_input(d.get("版次"), prefix="，頁")
+
+    # 最後一併生成並加上句號
     try:
-        # 生成原始字串
-        res = current_config["template"].format(**processed_data)
+        res = current_config["template"].format(**p)
+        res = res.strip("，").strip("：") # 清除尾端多餘符號
+        if res: res += "。"
         
-        # 強力清理標點符號邏輯
-        res = res.replace("，，", "，").replace("：，", "：").replace("、，", "，")
-        res = res.replace("，。", "。").replace("：：", "：").replace("（）", "")
-        
-        # 如果某些欄位完全沒填，可能會留下孤單的關鍵字，這裡做最後修飾
-        res = res.replace("頁。", "。").replace("年第期", "")
-
-        st.success("✅ 生成成功！")
-        st.code(res, language=None)
-        
-    except KeyError as e:
-        st.error(f"發生錯誤：模板中缺少欄位 {e}")
+        st.code(res)
+    except:
+        st.error("生成失敗，請檢查欄位。")

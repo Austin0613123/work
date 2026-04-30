@@ -113,8 +113,7 @@ if submit_btn:
         p["副刊"] = clean_input(d["副刊"])
         p["發布日期"] = clean_input(d["發布日期"], prefix="，")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁碼")
-        
-     elif source_type == "析出文獻":
+    elif source_type == "析出文獻":
         p["析出文獻責任者"] = clean_input(d["析出文獻責任者"], suffix="：")
         p["析出文獻題名"] = clean_input(d["析出文獻題名"], wrap="〈〉")
         p["文獻責任者"] = clean_input(d["文獻責任者"], prefix="，", suffix="：")
@@ -123,7 +122,6 @@ if submit_btn:
         p["出版者"] = clean_input(d["出版者"])
         p["出版年份"] = clean_input(d["出版年份"], prefix="，")
         p["頁碼"] = clean_input(d["頁碼"], prefix="，頁")
-
     elif source_type == "政府出版物、報告":
         # 責任者後方接冒號
         p["責任者"] = clean_input(d["責任者"], suffix="：")

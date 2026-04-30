@@ -27,8 +27,8 @@ CONFIG = {
         "template": "{作者}{篇名}{編者}{書名}{卷數}{部類}{出版地}{出版年份}{版本}{頁數}"
     },
     "期刊": {
-        "fields": ["作者", "篇名", "期刊名", "出版年份", "期數", "頁數"],
-        "template": "{作者}{篇名}{期刊名}{出版年份}{期數}{頁數}"
+        "fields": ["作者", "篇名", "期刊名", "卷數","出版年份", "期數", "頁數"],
+        "template": "{作者}{篇名}{期刊名}{卷數}{出版年份}{期數}{頁數}"
     },
     "報紙": {
         "fields": ["作者", "篇名", "報紙名稱", "出版日期", "版次"], 
@@ -119,6 +119,7 @@ if submit_btn:
         p["作者"] = clean_input(d["作者"], suffix="：")
         p["篇名"] = clean_input(d["篇名"], wrap="〈〉")
         p["期刊名"] = clean_input(d["期刊名"], prefix="，", wrap="《》")
+        p["卷數"] = clean_input(d["篇名"], wrap="，")
         p["出版年份"] = clean_input(d["出版年份"], prefix="，", suffix="年")
         p["期數"] = clean_input(d["期數"], prefix="第", suffix="期")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁")

@@ -35,8 +35,10 @@ CONFIG = {
         "template": "{作者}{篇名}{報紙名稱}{出版日期}{版次}"
     },
     "回歸前澳門憲報": {
-        "fields": ["標題", "法規編號", "憲報編號", "副刊", "發布日期", "頁數"],
-        "template": "{標題}{法規編號}{憲報編號}{副刊}{發布日期}{頁數}"
+        "fields": ["標題", "憲報名稱", "憲報編號", "副刊", "發布日期", "頁數"],
+        # 模板加入葡文名稱空間
+        "template": "{標題}{憲報名稱}{法規編號}{憲報編號}{副刊}{發布日期}{頁數}"
+    },
     },
     "析出文獻": {
         "fields": ["析出文獻責任者", "析出文獻題名", "文獻責任者", "文獻題名", "出版地", "出版者", "出版年份", "頁碼"],
@@ -72,7 +74,8 @@ CONFIG = {
     },
 }
 
-# --- 3. UI 介面 ---
+import datetime # 建議放在程式碼最上方
+
 # --- 3. UI 介面 ---
 st.title("📚 志書引用格式生成器")
 
@@ -85,17 +88,14 @@ with st.container():
     cols = st.columns(2)
     for i, field_name in enumerate(current_config["fields"]):
         with cols[i % 2]:
-            # --- 核心修改：針對「回歸前澳門憲報」的「發布日期」使用日期選擇器 ---
             if source_type == "回歸前澳門憲報" and field_name == "發布日期":
-                import datetime
-                # 預設值設為回歸當日
+                # 預設值設為回歸前夕
                 user_data[field_name] = st.date_input(
                     field_name, 
-                    value=datetime.date(1999, 12, 20),
+                    value=datetime.date(1999, 12, 19),
                     key=f"{source_type}_{field_name}"
                 )
             else:
-                # 其他所有欄位維持一般的文字輸入
                 user_data[field_name] = st.text_input(field_name, key=f"{source_type}_{field_name}")
 
     submit_btn = st.button("🚀 生成引用格式")
@@ -144,13 +144,48 @@ if submit_btn:
         p["出版日期"] = clean_input(d["出版日期"], prefix="，")
         p["版次"] = clean_input(d["版次"], prefix="，頁")
 
-    elif source_type == "澳門憲報":
+
+elif source_type == "回歸前澳門憲報":
+        d_val = d["發布日期"]
+        # 根據圖表 5d08574aa4b2ddb7a9b4de82c8e1a3c7.png 判定中葡文名稱
+        if d_val >= datetime.date(1999, 12, 20):
+            cn, pt = "Boletim Oficial da RAEM"
+        elif d_val >= datetime.date(1951, 7, 7):
+            cn, pt = "Boletim Oficial de Macau"
+        elif d_val >= datetime.date(1951, 1, 6):
+            cn, pt = "Boletim Oficial do Governo da Colónia de Macau"
+        elif d_val >= datetime.date(1943, 12, 31):
+            cn, pt = "Boletim Oficial da Colónia de Macau"
+        elif d_val >= datetime.date(1937, 1, 2):
+            cn, pt = "Boletim Oficial da Colónia de Macau"
+        elif d_val >= datetime.date(1936, 1, 4):
+            cn, pt = "Boletim Oficial"
+        elif d_val >= datetime.date(1923, 7, 7):
+            cn, pt = "Boletim Oficial do Governo da Província de Macau"
+        elif d_val >= datetime.date(1921, 9, 24):
+            cn, pt = "Boletim Oficial do Governo da Província de Macau"
+        elif d_val >= datetime.date(1891, 1, 2):
+            cn, pt = "Boletim Official do Governo da Provincia de Macau e Timor"
+        elif d_val >= datetime.date(1867, 2, 25):
+            cn, pt = "Boletim da Provincia de Macau e Timor"
+        elif d_val >= datetime.date(1867, 2, 18):
+            cn, pt = "Boletim do Governo de Macau e Timor"
+        elif d_val >= datetime.date(1856, 12, 13):
+            cn, pt = "O Boletim do Governo de Macao"
+        elif d_val >= datetime.date(1850, 11, 16):
+            cn, pt = "Boletim do Governo da Provincia de Macao, Timor, e Solor"
+        else:
+            cn, pt = "《澳門政府憲報》", "Boletim Oficial"
+
         p["標題"] = clean_input(d["標題"], wrap="〈〉")
+        p["憲報名稱"] = pt # 直接放入，模板中已有括號包裝
         p["法規編號"] = clean_input(d["法規編號"], prefix="，第", suffix="號")
-        p["憲報編號"] = clean_input(d["憲報編號"], prefix="，載《澳門特別行政區憲報》第", suffix="期")
+        p["憲報編號"] = clean_input(d["憲報編號"], prefix="第", suffix="期")
         p["副刊"] = clean_input(d["副刊"])
-        p["發布日期"] = clean_input(d["發布日期"], prefix="，")
+        p["發布日期"] = clean_input(d_val.strftime("%Y年%m月%d日"), prefix="，")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁碼")
+
+    
     elif source_type == "析出文獻":
         p["析出文獻責任者"] = clean_input(d["析出文獻責任者"], suffix="：")
         p["析出文獻題名"] = clean_input(d["析出文獻題名"], wrap="〈〉")

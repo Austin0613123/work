@@ -34,7 +34,7 @@ CONFIG = {
         "fields": ["作者", "篇名", "報紙名稱", "出版日期", "版次"], 
         "template": "{作者}{篇名}{報紙名稱}{出版日期}{版次}"
     },
-    "澳門憲報": {
+    "回歸前澳門憲報": {
         "fields": ["標題", "法規編號", "憲報編號", "副刊", "發布日期", "頁數"],
         "template": "{標題}{法規編號}{憲報編號}{副刊}{發布日期}{頁數}"
     },
@@ -73,7 +73,8 @@ CONFIG = {
 }
 
 # --- 3. UI 介面 ---
-st.title("📚 學術引用格式生成器")
+# --- 3. UI 介面 ---
+st.title("📚 志書引用格式生成器")
 
 source_type = st.selectbox("📌 請選擇資料類型", list(CONFIG.keys()))
 current_config = CONFIG[source_type]
@@ -84,10 +85,20 @@ with st.container():
     cols = st.columns(2)
     for i, field_name in enumerate(current_config["fields"]):
         with cols[i % 2]:
-            user_data[field_name] = st.text_input(field_name, key=f"{source_type}_{field_name}")
+            # --- 核心修改：針對「回歸前澳門憲報」的「發布日期」使用日期選擇器 ---
+            if source_type == "回歸前澳門憲報" and field_name == "發布日期":
+                import datetime
+                # 預設值設為回歸當日
+                user_data[field_name] = st.date_input(
+                    field_name, 
+                    value=datetime.date(1999, 12, 20),
+                    key=f"{source_type}_{field_name}"
+                )
+            else:
+                # 其他所有欄位維持一般的文字輸入
+                user_data[field_name] = st.text_input(field_name, key=f"{source_type}_{field_name}")
 
     submit_btn = st.button("🚀 生成引用格式")
-
 # --- 4. 生成結果邏輯 ---
 if submit_btn:
     d = user_data

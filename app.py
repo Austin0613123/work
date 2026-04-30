@@ -198,7 +198,7 @@ elif source_type == "回歸前澳門憲報":
         # --- 呼叫轉換工具 ---
         roman_issue = to_roman(d["憲報編號"])
         p["憲報期號"] = clean_input(roman_issue, prefix=",Vol. ")
-        p["號數"] = clean_input(d["號數"], prefix=',',surfix=".º ")
+        p["號數"] = clean_input(d["號數"], prefix=',',suffix=".º ")
     
         # 2. 處理「號數」與「副刊」的整合
         issue_num = str(d["號數"]).strip() # 取得號數，例如 "13"

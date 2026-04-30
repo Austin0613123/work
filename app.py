@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 
 st.set_page_config(page_title="澳門學術引用生成器", layout="centered")
 
@@ -14,6 +15,23 @@ def clean_input(val, prefix="", suffix="", wrap=None):
     elif wrap == "（）": v = f"（{v}）"
     
     return f"{prefix}{v}{suffix}"
+
+def to_roman(n):
+    """將阿拉伯數字轉換為羅馬數字"""
+    try:
+        n = int(str(n).strip())
+        val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+        syb = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"]
+        roman_num = ''
+        i = 0
+        while n > 0:
+            for _ in range(n // val[i]):
+                roman_num += syb[i]
+                n -= val[i]
+            i += 1
+        return roman_num
+    except:
+        return n # 如果不是純數字，則原樣回傳
 
 # --- 2. 配置字典 ---
 # 注意：template 裡只放變數，不放標點，標點改在後端動態加入
@@ -35,10 +53,8 @@ CONFIG = {
         "template": "{作者}{篇名}{報紙名稱}{出版日期}{版次}"
     },
     "回歸前澳門憲報": {
-        "fields": ["標題", "憲報名稱", "憲報編號", "副刊", "發布日期", "頁數"],
-        # 模板加入葡文名稱空間
-        "template": "{標題}{憲報名稱}{法規編號}{憲報編號}{副刊}{發布日期}{頁數}"
-    },
+        "fields": ["標題", "憲報名稱", "憲報期數","號數", "副刊1/2", "發布日期", "頁數"],
+        "template": "{標題}{憲報名稱}{憲報期數}{號數}{副刊1/2}{發布日期}{頁數}"
     },
     "析出文獻": {
         "fields": ["析出文獻責任者", "析出文獻題名", "文獻責任者", "文獻題名", "出版地", "出版者", "出版年份", "頁碼"],
@@ -146,42 +162,60 @@ if submit_btn:
 
 
 elif source_type == "回歸前澳門憲報":
-        d_val = d["發布日期"]
-        # 根據圖表 5d08574aa4b2ddb7a9b4de82c8e1a3c7.png 判定中葡文名稱
+        d_val = d["發布日期"] # 這是 st.date_input 回傳的 date 物件
+        # 自動判定葡文名稱 (pt)
         if d_val >= datetime.date(1999, 12, 20):
-            cn, pt = "Boletim Oficial da RAEM"
+            pt = "Boletim Oficial da RAEM"
         elif d_val >= datetime.date(1951, 7, 7):
-            cn, pt = "Boletim Oficial de Macau"
+            pt = "Boletim Oficial de Macau"
         elif d_val >= datetime.date(1951, 1, 6):
-            cn, pt = "Boletim Oficial do Governo da Colónia de Macau"
+            pt = "Boletim Oficial do Governo da Colónia de Macau"
         elif d_val >= datetime.date(1943, 12, 31):
-            cn, pt = "Boletim Oficial da Colónia de Macau"
+            pt = "Boletim Oficial da Colónia de Macau"
         elif d_val >= datetime.date(1937, 1, 2):
-            cn, pt = "Boletim Oficial da Colónia de Macau"
+            pt = "Boletim Oficial da Colónia de Macau"
         elif d_val >= datetime.date(1936, 1, 4):
-            cn, pt = "Boletim Oficial"
+            pt = "Boletim Oficial"
         elif d_val >= datetime.date(1923, 7, 7):
-            cn, pt = "Boletim Oficial do Governo da Província de Macau"
+            pt = "Boletim Oficial do Governo da Província de Macau"
         elif d_val >= datetime.date(1921, 9, 24):
-            cn, pt = "Boletim Oficial do Governo da Província de Macau"
+            pt = "Boletim Oficial do Governo da Província de Macau"
         elif d_val >= datetime.date(1891, 1, 2):
-            cn, pt = "Boletim Official do Governo da Provincia de Macau e Timor"
+            pt = "Boletim Official do Governo da Provincia de Macau e Timor"
         elif d_val >= datetime.date(1867, 2, 25):
-            cn, pt = "Boletim da Provincia de Macau e Timor"
+            pt = "Boletim da Provincia de Macau e Timor"
         elif d_val >= datetime.date(1867, 2, 18):
-            cn, pt = "Boletim do Governo de Macau e Timor"
+            pt = "Boletim do Governo de Macau e Timor"
         elif d_val >= datetime.date(1856, 12, 13):
-            cn, pt = "O Boletim do Governo de Macao"
+            pt = "O Boletim do Governo de Macao"
         elif d_val >= datetime.date(1850, 11, 16):
-            cn, pt = "Boletim do Governo da Provincia de Macao, Timor, e Solor"
+            pt = "Boletim do Governo da Provincia de Macao, Timor, e Solor"
         else:
-            cn, pt = "《澳門政府憲報》", "Boletim Oficial"
+            pt = "Boletim Oficial"
+            
+        p["標題"] = clean_input(d["標題"], prefix='"', suffix='"')
+        p["憲報名稱"] = f"（*{pt}*）"
+        # --- 呼叫轉換工具 ---
+        roman_issue = to_roman(d["憲報編號"])
+        p["憲報期號"] = clean_input(roman_issue, prefix=",Vol. ")
+        p["號數"] = clean_input(d["號數"], prefix=',',surfix=".º ")
+    
+        # 2. 處理「號數」與「副刊」的整合
+        issue_num = str(d["號數"]).strip() # 取得號數，例如 "13"
+        supp_val = str(d["副刊"]).strip()  # 取得副刊類型 "1" 或 "2"
 
-        p["標題"] = clean_input(d["標題"], wrap="〈〉")
-        p["憲報名稱"] = pt # 直接放入，模板中已有括號包裝
-        p["法規編號"] = clean_input(d["法規編號"], prefix="，第", suffix="號")
-        p["憲報編號"] = clean_input(d["憲報編號"], prefix="第", suffix="期")
-        p["副刊"] = clean_input(d["副刊"])
+        if supp_val == "1":
+            # 如果有副刊，將號數整合進副刊字串中
+            p["副刊"] = f", 1.º Supplemento ao n.º {issue_num}" if issue_num else ", 1.º Supplemento"
+            p["號數"] = "" # 清空號數，避免重複輸出
+        elif supp_val == "2":
+            p["副刊"] = f", 2.º Supplemento ao n.º {issue_num}" if issue_num else ", 2.º Supplemento"
+            p["號數"] = "" # 清空號數，避免重複輸出
+        else:
+            # 如果沒有副刊，則單獨處理號數
+            p["號數"] = clean_input(issue_num, prefix=", n.º ")
+            p["副刊"] = ""
+
         p["發布日期"] = clean_input(d_val.strftime("%Y年%m月%d日"), prefix="，")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁碼")
 
@@ -282,7 +316,6 @@ elif source_type == "回歸前澳門憲報":
         p["頁碼"] = clean_input(d["頁碼"])
 
     
-
     # 執行生成
     try:
         # 建立一個與 template 欄位數量一致的 dict，避免 format 報錯
@@ -291,13 +324,17 @@ elif source_type == "回歸前澳門憲報":
         res = current_config["template"].format(**final_p)
         
         # 最後修整：清除可能因為拼接產生的多餘頭尾符號
-        res = res.strip("，").strip("：").strip("、")
-        if res and not res.endswith("。"):
-            res += "。"
-        
-        if res:
+       if res:
             st.success("✅ 生成成功！")
+            
+            # 顯示生成的引用字串
             st.code(res, language=None)
+            
+            # 加入專業標註提示
+            st.caption("💡 **註：如果是英/葡文書籍、或憲報，需按學術規範改為斜體。**")
+            
+            # 如果你想讓提示更顯眼，也可以改用 info 樣式：
+            # st.info("註：括號內之葡文名稱按學術規範建議改為斜體。")
         else:
             st.warning("請至少輸入一些資訊內容。")
             

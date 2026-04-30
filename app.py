@@ -19,8 +19,8 @@ def clean_input(val, prefix="", suffix="", wrap=None):
 # 注意：template 裡只放變數，不放標點，標點改在後端動態加入
 CONFIG = {
     "著作": {
-        "fields": ["作者", "書名", "版本", "出版地", "出版社", "出版年份", "頁數"],
-        "template": "{作者}{書名}{版本}{出版地}{出版社}{出版年份}{頁數}"
+        "fields": ["朝代","作者", "書名", "版本", "出版地", "出版社", "出版年份", "頁數"],
+        "template": "{朝代}{作者}{書名}{版本}{出版地}{出版社}{出版年份}{頁數}"
     },
     "古籍": {
         "fields": ["作者", "篇名", "編者", "書名", "卷數", "部類", "出版地", "出版年份", "版本", "頁數"],
@@ -104,6 +104,7 @@ if submit_btn:
         p["頁數"] = clean_input(d["頁數"], prefix="，頁")
 
     elif source_type == "古籍":
+        p["朝代"] = clean_input(d["朝代"], prefix="[", suffix="]")
         p["作者"] = clean_input(d["作者"], suffix="：")
         p["篇名"] = clean_input(d["篇名"], wrap="〈〉")
         p["編者"] = clean_input(d["編者"], prefix="，", suffix="：")

@@ -114,14 +114,14 @@ if submit_btn:
         p["出版年份"] = clean_input(d["出版年份"], prefix="，")
         p["版本"] = clean_input(d["版本"], prefix="，")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁")
-
+        
     elif source_type == "期刊":
         p["作者"] = clean_input(d["作者"], suffix="：")
         p["篇名"] = clean_input(d["篇名"], wrap="〈〉")
         p["期刊名"] = clean_input(d["期刊名"], prefix="，", wrap="《》")
         p["卷數"] = clean_input(d["卷數"], prefix="，卷")
         p["期數"] = clean_input(d["期數"], prefix="，第", suffix="期")
-        p["出版年份"] = clean_input(d["出版年份"], prefix="(", suffix=")")
+        p["出版年份"] = clean_input(d["出版年份"], wrap="（）")
         p["頁數"] = clean_input(d["頁數"], prefix="，頁")
 
     elif source_type == "報紙":
